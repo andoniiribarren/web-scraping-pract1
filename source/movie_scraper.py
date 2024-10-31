@@ -42,11 +42,9 @@ while len(movie_links) < 100:
             movie_links.append(link.get('href'))
         else:
             break
-
-# Cerrar el navegador
 driver.quit()
 
-# Definir una lista para almacenar los datos de las películas
+# Lista para almacenar los datos de las películas
 movies_data = []
 
 # Extraemos los datos de las 100 películas usando requests porque no tienen ningún elemento complicado
