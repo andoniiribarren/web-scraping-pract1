@@ -1,1 +1,83 @@
-Python libraries
+#
+# To install
+#
+# sudo apt-get install build-essential htop -y
+# sudo apt-get install libmysqlclient-dev python3.11-full python3.11-venv python3.11-dev libpython3.11-dev -y
+
+
+#
+# Python libraries
+#
+
+
+argparse
+datetime
+tzlocal
+
+selenium
+webdriver-manager
+pandas<2.2
+
+whois
+requests
+pathlib
+
+flask
+flask_restful
+
+beautifulsoup4
+builtwith
+certifi
+charset-normalizer
+future
+idna
+python-whois
+six
+soupsieve
+tqdm
+urllib3
+brotli
+cssselect
+
+cryptography
+PyJWT
+pyOpenSSL
+
+#
+# Display
+#
+numpy<2
+ipython
+Jinja2
+tabulate
+matplotlib
+pillow
+
+#
+# XML, XLS
+#
+
+openpyxl
+xlsxwriter
+lxml
+xmltodict
+xlrd
+
+#
+# Test
+#
+
+pytest
+
+
+#
+# ASYNC
+#
+
+asyncio
+aiohttp
+aiofiles
+aiomysql
+aiohttp-devtools
+aiohttp-session
+async-timeout
