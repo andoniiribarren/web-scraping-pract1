@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import time
 import requests
@@ -10,11 +11,16 @@ import csv
 def movie_scraper():
 
     # Usamos selenium para abrir la página porque tiene un popup de privacidad
-    driver = webdriver.Chrome() 
+
+	# Configuramos las opciones para que no abra el navegador visualmente
+	opts = Options()
+	opts.add_argument("--headless")
+    
+	driver = webdriver.Chrome(options=opts) 
     web = "https://www.filmaffinity.com/es/ranking.php?rn=ranking_2024_topmovies"
     driver.get(web)
 
-    time.sleep(4)
+    time.sleep(3)
 
     # Pulsamos el botón correspondiente a "No aceptar" el popup de privacidad
     try:
@@ -67,9 +73,9 @@ def movie_scraper():
         movies_data.append([pos,tit, dur, pais, direc, gen, nota])
 
     # Guardamos los datos en un archivo CSV
-    with open("filmaffinity_movies1.csv", mode="w", newline='', encoding="utf-8") as file:
-        writer = csv.writer(file)
-        writer.writerow(["Posición","Título", "Duración", "País", "Dirección", "Género", "Nota"])
-        writer.writerows(movies_data)
+	with open("top100_2024films.csv", mode="w", newline='', encoding="utf-8") as file:
+    writer = csv.writer(file)
+    writer.writerow(["Posición","Título", "Duración", "País", "Dirección", "Género", "Nota"])
+    writer.writerows(movies_data)
 
 
