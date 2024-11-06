@@ -16,8 +16,9 @@ argparse
 datetime
 tzlocal
 
-
+# Analysis
 pandas<2.2
+numpy<2
 
 # The goal of pathlib2 is to provide a backport of standard pathlib module which tracks 
 # the standard library module, so all the newest features of the standard pathlib can be 
@@ -125,8 +126,22 @@ beautifulsoup4
 # Detect the technology used by a website, such as Apache, JQuery, and Wordpress
 builtwith
 
+# Python library that parses robots.txt files
+robotsparser
+
+# Stateful programmatic web browsing in Python
+mechanize
+
+# Python-tesseract is an optical character recognition (OCR) tool for python.
+# That is, it will recognize and “read” the text embedded in images.
+# https://code.google.com/p/tesseract-ocr/wiki/ReadMe
+pytesseract
 
 
+# Scrapy is a BSD-licensed fast high-level web crawling and web scraping framework, used to 
+# crawl websites and extract structured data from their pages. It can be used for a wide range 
+# of purposes, from data mining to monitoring and automated testing.
+scrapy
 
 ########################################################################################
 #
@@ -143,15 +158,36 @@ pillow
 
 ########################################################################################
 #
-# XML, XLS
+# XLS
 #
 ########################################################################################
 
+# The recommended package for reading and writing Excel 2010 files (ie: .xlsx)
 openpyxl
+
+# An alternative package for writing data, formatting information and, in particular, charts in the Excel 2010 format (ie: .xlsx)
 xlsxwriter
-lxml
-xmltodict
+
+# xlrd is a library for reading data and formatting information from Excel files in the historical .xls format.
+# https://www.python-excel.org/
 xlrd
+
+
+########################################################################################
+#
+# XML
+#
+########################################################################################
+
+# lxml is a Pythonic, mature binding for the libxml2 and libxslt libraries. It provides 
+# safe and convenient access to these libraries using the ElementTree API.
+# It extends the ElementTree API significantly to offer support for XPath, RelaxNG, XML 
+# Schema, XSLT, C14N and much more.
+lxml
+
+# Python module that makes working with XML feel like you are working with JSON
+xmltodict
+
 
 ########################################################################################
 #
@@ -176,3 +212,34 @@ aiomysql
 aiohttp-devtools
 aiohttp-session
 async-timeout
+
+
+########################################################################################
+#
+# Database
+#
+########################################################################################
+
+# The PyMongo distribution contains tools for interacting with MongoDB database from Python.
+# The bson package is an implementation of the BSON format for Python. The pymongo package is 
+# a native Python driver for MongoDB. The gridfs package is a gridfs implementation on top of pymongo.
+# PyMongo supports MongoDB 3.6, 4.0, 4.2, 4.4, 5.0, 6.0, 7.0, and 8.0.
+pymongo
+
+
+
+########################################################################################
+#
+# Qt
+#
+########################################################################################
+
+# https://www.pythonguis.com/faq/pyqt6-vs-pyside6/?gad_source=1&gclid=Cj0KCQjwm5e5BhCWARIsANwm06jA1h0UWG0p6JZgy2QYxWfpSzgv9b8aGYlUCZAO7wONU2GJypgDjZ8aAsLlEALw_wcB
+# PyQt is developed by Phil Thompson of Riverbank Computing Ltd. 
+# Qt project has recently adopted PySide as the official Qt for Python release which should ensure its viability going forward
+# PyQt6 being available under a GPL or commercial license, and PySide6 under a LGPL license
+
+
+pyside6
+#pyqt6
+
