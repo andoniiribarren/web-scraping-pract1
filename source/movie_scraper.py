@@ -1,16 +1,22 @@
 import urllib
 import urllib.parse
 import urllib.robotparser
+
 from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import *
+
+
 from bs4 import BeautifulSoup
 import time
 import requests
 import csv
 
-
+USE_HEADLESS = False
 
 def movie_scraper():
 
@@ -51,7 +57,8 @@ def movie_scraper():
     # Usamos selenium para abrir la página porque tiene un popup de privacidad
     # Configuramos las opciones para que no abra el navegador visualmente
     opts = Options()
-    opts.add_argument("--headless=new")
+    if USE_HEADLESS:
+        opts.add_argument("--headless=new")
     opts.add_argument(f"--user-agent={user_agent}")
 
     driver = webdriver.Chrome(options=opts) 
@@ -80,30 +87,62 @@ def movie_scraper():
     # Usamos un set para evitar duplicados en los enlaces
     movie_links = set()
     
+    nb_empty_loops = 0
     while len(movie_links) < 100:
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         last_height = driver.execute_script("return document.body.scrollHeight")
         
         #time.sleep(2)
         try:
+            # https://www.browserstack.com/guide/element-click-intercepted-exception-selenium
+            
             moreResults_button = driver.find_element(By.CSS_SELECTOR, '.show-more')
-            ActionChains(driver).move_to_element(moreResults_button).click(moreResults_button).perform()
+            
+            driver.execute_script("arguments[0].scrollIntoView();", moreResults_button)
+            WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.show-more')))
+            
+            actions = ActionChains(driver)
+            actions.move_to_element(moreResults_button)
+            actions.perform()
+            actions.click(moreResults_button)
+            actions.perform()
+            
+            if USE_HEADLESS and False:
+                # Wait for the element to be clickable
+                try:
+                    WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.show-more')))
+                    moreResults_button.click()
+                    print("show-more button clicked")
+                except ElementClickInterceptedException as ex:
+                    print(f"Failed to click the show-more button - try again: {str(ex)}")
+                    #webdriver.ActionChains(driver).move_to_element(moreResults_button ).click(moreResults_button).perform()
+                    # Try executing script
+                    #driver.execute_script("arguments[0].click();", WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.show-more'))))
+                    #driver.execute_script("arguments[0].click();", moreResults_button)
+                    
+                    driver.execute_script("arguments[0].scrollIntoView();", moreResults_button)
+                    moreResults_button.click()
+                except Exception as ex:
+                    print(f"Failed to click the show-more button: {str(ex)}")
+            
             time.sleep(2)
             
-            
+            # Move
             if False:
                 # Moverse de nuevo al botón
-                moreResults_button = driver.find_element(By.CSS_SELECTOR, '.show-more')
-                ActionChains(driver).move_to_element(moreResults_button)
+                WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.show-more')))
+                webdriver.ActionChains(driver).move_to_element(moreResults_button )
             
-            # Verificar que se ha aumentado el scrollHeight
-            new_height = driver.execute_script("return document.body.scrollHeight")
-            if new_height == last_height:
-                break
+            if False:
+                # Verificar que se ha aumentado el scrollHeight
+                new_height = driver.execute_script("return document.body.scrollHeight")
+                if new_height == last_height:
+                    break
 
-            last_height = new_height
+                last_height = new_height
                 
-        except:
+        except Exception as ex:
+            print(str(ex))
             print("No more results.")
             # Exit the loop
             break
@@ -121,9 +160,17 @@ def movie_scraper():
                         has_added_new_links = True
                 else:
                     break
+                
+                
         if has_added_new_links is False:
             # There are no new links
-            break
+            nb_empty_loops = nb_empty_loops + 1
+            if nb_empty_loops >4:
+                # Do not keep trying
+                break
+        else:
+            # Reset counter
+            nb_empty_loops = 0
     
     driver.quit()
 
