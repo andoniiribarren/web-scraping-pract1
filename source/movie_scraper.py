@@ -14,27 +14,53 @@ import csv
 
 def movie_scraper():
 
-    # Usamos selenium para abrir la página porque tiene un popup de privacidad
-
-    # Configuramos las opciones para que no abra el navegador visualmente
-    opts = Options()
-    opts.add_argument("--headless")
-
-    driver = webdriver.Chrome(options=opts) 
+    
+    # https://www.filmaffinity.com/es/ranking.php?rn=ranking_2024_topmovies
     base_url = "https://www.filmaffinity.com"
     web = f"{base_url}/es/ranking.php?rn=ranking_2024_topmovies"
+
+    # Preliminar
+    user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
+    robot_url = f"{base_url}/robots.txt"
+    rp = urllib.robotparser.RobotFileParser(robot_url)
+    
+    # Leer el fichero robots.txt
+    # Esta web rechaza la lectura realizada por defecto por la clase RobotFileParser,
+    # así que leeremos el archivo de forma alternativa
+    #rp.read()
+    
+    headers={'User-Agent':user_agent,} 
+    request=urllib.request.Request(robot_url,None,headers)
+    response = urllib.request.urlopen(request)
+    robot_data_raw = response.read() 
+    
+    # Pasar el contenido a rp
+    rp.parse(robot_data_raw.decode("utf-8").splitlines())
+    
+    
+    # Obtener el delay que indica en el fichero robots
+    crawl_delay = rp.crawl_delay(user_agent)
+    if crawl_delay is None:
+        # Establecer 2 como delay porque no hay ninguno especificado en el servidor
+        crawl_delay = 2
+    else:
+        # Establecer un mínimo de 2
+        crawl_delay = max(2, crawl_delay)
+
+
+    # Usamos selenium para abrir la página porque tiene un popup de privacidad
+    # Configuramos las opciones para que no abra el navegador visualmente
+    opts = Options()
+    opts.add_argument("--headless=new")
+    opts.add_argument(f"--user-agent={user_agent}")
+
+    driver = webdriver.Chrome(options=opts) 
+
     driver.get(web)
 
     time.sleep(3)
 
-    # Preliminar
-    user_agent = "ms"  # Movie Scraper
-    robot_url = f"{base_url}/robots.txt"
-    rp = urllib.robotparser.RobotFileParser(robot_url)
-    # Leer el fichero robots.txt
-    rp.read()
-    # Obtener el delay que indica en el fichero robots
-    crawl_delay = max(2, rp.crawl_delay())
+
 
     # Pulsamos el botón correspondiente a "No aceptar" el popup de privacidad
     try:
@@ -44,6 +70,10 @@ def movie_scraper():
     except:
         print("Privacy popup not found.")
 
+
+        
+        
+
     # Sólo se muestran los primeros 30 resultados, hay que volver a usar el webdriver de 
     # Selenium para cargar más resultados hasta que salgan las 100 películas 
     
@@ -51,13 +81,28 @@ def movie_scraper():
     movie_links = set()
     
     while len(movie_links) < 100:
-        movie_links = []
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        last_height = driver.execute_script("return document.body.scrollHeight")
+        
         #time.sleep(2)
         try:
             moreResults_button = driver.find_element(By.CSS_SELECTOR, '.show-more')
             ActionChains(driver).move_to_element(moreResults_button).click(moreResults_button).perform()
             time.sleep(2)
+            
+            
+            if False:
+                # Moverse de nuevo al botón
+                moreResults_button = driver.find_element(By.CSS_SELECTOR, '.show-more')
+                ActionChains(driver).move_to_element(moreResults_button)
+            
+            # Verificar que se ha aumentado el scrollHeight
+            new_height = driver.execute_script("return document.body.scrollHeight")
+            if new_height == last_height:
+                break
+
+            last_height = new_height
+                
         except:
             print("No more results.")
             # Exit the loop
@@ -65,13 +110,21 @@ def movie_scraper():
         
         # Extraemos los links de los resultados de la películas
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        for link in soup.select('.mc-title a'):
+        has_added_new_links = False
+        for a_element in soup.select('.mc-title a'):
             # Check with robots if we can fetch the link
-            if rp.can_fetch(user_agent, link):
+            href = a_element.get('href')
+            if rp.can_fetch(user_agent, href):
                 if len(movie_links) < 100:
-                    movie_links.append(link.get('href'))
+                    if href not in movie_links:
+                        movie_links.add(href)
+                        has_added_new_links = True
                 else:
                     break
+        if has_added_new_links is False:
+            # There are no new links
+            break
+    
     driver.quit()
 
     # Lista para almacenar los datos de las películas
