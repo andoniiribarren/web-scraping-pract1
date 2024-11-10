@@ -31,6 +31,11 @@ six
 # Instantly make your loops show a smart progress meter - just wrap any iterable with tqdm(iterable), and you’re done!
 tqdm
 
+# Rich is a Python library for rich text and beautiful formatting in the terminal.
+# The Rich API makes it easy to add color and style to terminal output. 
+# Rich can also render pretty tables, progress bars, markdown, syntax highlighted source code, tracebacks, and more — out of the box.
+rich
+
 # Cryptography is a package which provides cryptographic recipes and primitives to Python 
 # developers. Our goal is for it to be your “cryptographic standard library”. 
 # It supports Python 3.7+ and PyPy3 7.3.11+.

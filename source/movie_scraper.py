@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8 -*-
+# cython: language_level=3
+
+import os
 import urllib
 import urllib.parse
 import urllib.robotparser
@@ -16,23 +21,28 @@ import time
 import requests
 import csv
 
+from tqdm import tqdm
+
 USE_HEADLESS = False
+DEFAULT_CRAWL_DELAY_S = 0.1
 
 def movie_scraper():
 
     
     # https://www.filmaffinity.com/es/ranking.php?rn=ranking_2024_topmovies
     base_url = "https://www.filmaffinity.com"
-    web = f"{base_url}/es/ranking.php?rn=ranking_2024_topmovies"
+    url_objetivo = f"{base_url}/es/ranking.php?rn=ranking_2024_topmovies"
 
+    #
     # Preliminar
+    #
     user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
     robot_url = f"{base_url}/robots.txt"
     rp = urllib.robotparser.RobotFileParser(robot_url)
     
     # Leer el fichero robots.txt
     # Esta web rechaza la lectura realizada por defecto por la clase RobotFileParser,
-    # así que leeremos el archivo de forma alternativa
+    # así que leeremos el archivo con una request
     #rp.read()
     
     headers={'User-Agent':user_agent,} 
@@ -47,11 +57,11 @@ def movie_scraper():
     # Obtener el delay que indica en el fichero robots
     crawl_delay = rp.crawl_delay(user_agent)
     if crawl_delay is None:
-        # Establecer 2 como delay porque no hay ninguno especificado en el servidor
-        crawl_delay = 2
+        # Establecer 1 como delay porque no hay ninguno especificado en el servidor
+        crawl_delay = DEFAULT_CRAWL_DELAY_S
     else:
-        # Establecer un mínimo de 2
-        crawl_delay = max(2, crawl_delay)
+        # Establecer un mínimo de 1
+        crawl_delay = max(DEFAULT_CRAWL_DELAY_S, crawl_delay)
 
 
     # Usamos selenium para abrir la página porque tiene un popup de privacidad
@@ -61,21 +71,26 @@ def movie_scraper():
         opts.add_argument("--headless=new")
     opts.add_argument(f"--user-agent={user_agent}")
 
+    # Crear el driver y cargar la página
     driver = webdriver.Chrome(options=opts) 
+    driver.get(url_objetivo)
 
-    driver.get(web)
-
-    time.sleep(3)
-
-
-
+    
     # Pulsamos el botón correspondiente a "No aceptar" el popup de privacidad
     try:
+        # Esperamos a que aparezca el botón de popup de privacidad
+        WebDriverWait(driver, 4).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '.css-xlut8b')))
+
+        # Hacemos click en el botón
         p_button = driver.find_element(By.CSS_SELECTOR, '.css-xlut8b')
         p_button.click()
         print("Privacy popup closed.")
-    except:
+    except TimeoutException as te:
         print("Privacy popup not found.")
+    except Exception as ex:
+        errorMsg = str(ex)
+        print(errorMsg)
+        
 
 
         
@@ -179,8 +194,12 @@ def movie_scraper():
 
     # Extraemos los datos de las 100 películas usando requests porque no tienen ningún elemento complicado
     # y el popup de privacidad ya ha sido aceptado
-    for i, movie_link in enumerate(movie_links, 1):
-        response = requests.get(movie_link)
+    
+    l = list(movie_links)
+    n = len(l)
+    for i in tqdm(range(n)):
+        movie_link = l[i]
+        response = requests.get(movie_link, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
         
         pos = i
@@ -193,12 +212,17 @@ def movie_scraper():
         
         movies_data.append([pos,tit, dur, pais, direc, gen, nota])
         
+        
+        
         # Esperamos entre consultas para reducir la presión sobre
         # el servidor y evitar ser bloqueados
         time.sleep(crawl_delay)
+        
+        
 
     # Guardamos los datos en un archivo CSV
-    with open("top100_2024films.csv", mode="w", newline='', encoding="utf-8") as file:
+    fn = os.path.join('dataset','top100_2024films.csv')
+    with open(fn, mode="w", newline='', encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(["Posición","Título", "Duración", "País", "Dirección", "Género", "Nota"])
         writer.writerows(movies_data)
