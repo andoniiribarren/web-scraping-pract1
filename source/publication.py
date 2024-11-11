@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8 -*-
 # cython: language_level=3
-    
+
 """This module is to publish a dataset into Zenodo and obtain the DOI
 """
 
-import os
-import sys
-import requests
 import json
 from urllib.parse import urljoin
+
+from typing import (
+    Union
+)
+import os
 import requests
-import io
-import zipfile
-import zlib
 
 from common import CSV_FN, console
 
@@ -81,8 +80,8 @@ def get_token(env: str, scope: str) -> dict:
             }
         
     """
-    
-    di_token: dict = None
+
+    di_token: dict = {}
     keys = APP_KEYS[env]
     url =  urljoin(keys['server'], '/oauth/token')
     data = {
@@ -92,32 +91,31 @@ def get_token(env: str, scope: str) -> dict:
         'scope': scope
         #'scope': 'deposit:write'
     }
-    
+
     r = requests.post(url, data=data, timeout = 10)
-    
+
     status_code = r.status_code
     if status_code >= 200 and status_code< 300:
         di_token = r.json()
     elif status_code >= 300 and status_code< 400:
-        print(f"Redirection {status_code}")
+        console.print(f"Redirection {status_code}")
     elif status_code >= 400 and status_code< 500:
-         print(f"Client error {status_code}: {r.text}")
+         console.print(f"Client error {status_code}: {r.text}")
     elif status_code >= 500 and status_code< 600:
-        print(f"Server error {status_code}: {r.text}")
+        console.print(f"Server error {status_code}: {r.text}")
     else:
-        print(f"Status code {status_code}")
+        console.print(f"Status code {status_code}")
 
-    
-    
+
     try:
-        print(r.status_code)
-        print(r.json())
+        console.print(r.status_code)
+        console.print(r.json())
     except:
         pass
-    
+
     return di_token
 
-def get_depositions(env:str, access_token:str, deposition_id:int=None) -> dict:
+def get_depositions(env:str, access_token:str, deposition_id:Union[int,None]=None) -> Union[dict,None]:
     """_summary_
 
     Args:
@@ -130,15 +128,15 @@ def get_depositions(env:str, access_token:str, deposition_id:int=None) -> dict:
     """
     d = None
     keys = APP_KEYS[env]
-    
+
     url =  urljoin(keys['server'], '/api/deposit/depositions')
     if deposition_id is not None:
         # URL to retrieve deposition
         url =  f'{url}/{str(deposition_id)}'
-    
+
     headers = {"Content-Type": "application/json"}
     params = {'access_token': access_token}
-    
+
     if deposition_id is None:
         # Create deposition
         r = requests.post(url,
@@ -153,28 +151,28 @@ def get_depositions(env:str, access_token:str, deposition_id:int=None) -> dict:
                         json={},
                         headers=headers,
                         timeout = 10)
-        
+
     status_code = r.status_code
     if status_code >= 200 and status_code< 300:
         d = r.json()
     elif status_code >= 300 and status_code< 400:
-        print(f"Redirection {status_code}")
+        console.print(f"Redirection {status_code}")
     elif status_code >= 400 and status_code< 500:
-         print(f"Client error {status_code}: {r.text}")
+        console.print(f"Client error {status_code}: {r.text}")
     elif status_code >= 500 and status_code< 600:
-        print(f"Server error {status_code}: {r.text}")
+        console.print(f"Server error {status_code}: {r.text}")
     else:
-        print(f"Status code {status_code}")
-    
+        console.print(f"Status code {status_code}")
+
     return d
 
 
-def upload_file(access_token:str, depositions:object, fn:str) -> dict:
+def upload_file(access_token:str, depositions:dict, fn:str) -> Union[dict,None]:
     """Upload file to deposition in zenodo
 
     Args:
         access_token (str): token to use the API
-        depositions (object): depositions retrieved from Zenodo
+        depositions (dict): depositions retrieved from Zenodo
         fn (str): filename of the file to upload
 
     Raises:
@@ -189,23 +187,13 @@ def upload_file(access_token:str, depositions:object, fn:str) -> dict:
     # headers = {
     #     'Content-Encoding': 'gzip'
     # }
-    
+
     # Verify that the data file exists
     if os.path.isfile(fn) is False:
         raise FileNotFoundError(fn)
-    
-    # https://proxiesapi.com/articles/uploading-zip-files-via-http-post-with-python-requests
-    # Create in-memory zip file
-    
-    # # We wrap the zip file in an io.BytesIO stream so Requests can read it but we don't have to save it locally
-    # with io.BytesIO() as data:
-    #     # Create the zip file and move cursor to beginning
-    #     with zipfile.ZipFile(data, mode="w") as z:
-    #         z.write(fn)
-    #     data.seek(0)
-    
+
     with open(fn, "rb") as data:
-        
+
         # Put the file in the bucket
         filename = os.path.basename(fn)
         url = f"{bucket_url}/{filename}"
@@ -219,17 +207,17 @@ def upload_file(access_token:str, depositions:object, fn:str) -> dict:
         if status_code >= 200 and status_code< 300:
             file_result = r.json()
         elif status_code >= 300 and status_code< 400:
-            print(f"Redirection {status_code}")
+            console.print(f"Redirection {status_code}")
         elif status_code >= 400 and status_code< 500:
-            print(f"Client error {status_code}: {r.text}")
+            console.print(f"Client error {status_code}: {r.text}")
         elif status_code >= 500 and status_code< 600:
-            print(f"Server error {status_code}: {r.text}")
+            console.print(f"Server error {status_code}: {r.text}")
         else:
-            print(f"Status code {status_code}")
-    
+            console.print(f"Status code {status_code}")
+
     return file_result
 
-def upload_metadata(env:str, access_token:str, deposition_id:int) -> dict:
+def upload_metadata(env:str, access_token:str, deposition_id:int) -> Union[dict,None]:
     """_summary_
 
     Args:
@@ -240,7 +228,7 @@ def upload_metadata(env:str, access_token:str, deposition_id:int) -> dict:
     Returns:
         dict: result received from Zenodo
     """
-    
+
     result = None
     keys = APP_KEYS[env]
     url =  urljoin(keys['server'], f'/api/deposit/depositions/{deposition_id}')
@@ -253,12 +241,18 @@ def upload_metadata(env:str, access_token:str, deposition_id:int) -> dict:
             'upload_type': 'dataset',
             'description': "Film Affinity Top Movies 2024",
             'creators': [
-                {'name': "Andoni Iribarren González", 'affiliation': "Universitat Oberta de Catalunya"},
-                {'name': "Juan Pedro Rodríguez", 'affiliation': "Universitat Oberta de Catalunya"}
+                {
+                    'name': "Andoni Iribarren González", 
+                    'affiliation': "Universitat Oberta de Catalunya"
+                },
+                {
+                    'name': "Juan Pedro Rodríguez",
+                    'affiliation': "Universitat Oberta de Catalunya"
+                }
             ]
         }
     }
-    
+
 
     r = requests.put(
         url,
@@ -271,19 +265,19 @@ def upload_metadata(env:str, access_token:str, deposition_id:int) -> dict:
     if status_code >= 200 and status_code< 300:
         result = r.json()
     elif status_code >= 300 and status_code< 400:
-        print(f"Redirection {status_code}")
+        console.print(f"Redirection {status_code}")
     elif status_code >= 400 and status_code< 500:
-        print(f"Client error {status_code}: {r.text}")
+        console.print(f"Client error {status_code}: {r.text}")
     elif status_code >= 500 and status_code< 600:
-        print(f"Server error {status_code}: {r.text}")
+        console.print(f"Server error {status_code}: {r.text}")
     else:
-        print(f"Status code {status_code}")
-    
+        console.print(f"Status code {status_code}")
+
 
     return result
 
 
-def delete_file(env:str, access_token:str, deposition_id:int, file_id:int) -> dict:
+def delete_file(env:str, access_token:str, deposition_id:int, file_id:int) -> Union[dict,None]:
     """_summary_
 
     Args:
@@ -300,7 +294,7 @@ def delete_file(env:str, access_token:str, deposition_id:int, file_id:int) -> di
     url =  urljoin(keys['server'], f'/api/deposit/depositions/{deposition_id}/files/{file_id}')
     params = {'access_token': access_token}
     headers = {'Content-Type': 'application/json'}
-    
+
 
     r = requests.delete(
         url,
@@ -312,18 +306,18 @@ def delete_file(env:str, access_token:str, deposition_id:int, file_id:int) -> di
     if status_code >= 200 and status_code< 300:
         result = r.json()
     elif status_code >= 300 and status_code< 400:
-        print(f"Redirection {status_code}")
+        console.print(f"Redirection {status_code}")
     elif status_code >= 400 and status_code< 500:
-        print(f"Client error {status_code}: {r.text}")
+        console.print(f"Client error {status_code}: {r.text}")
     elif status_code >= 500 and status_code< 600:
-        print(f"Server error {status_code}: {r.text}")
+        console.print(f"Server error {status_code}: {r.text}")
     else:
-        print(f"Status code {status_code}")
-    
+        console.print(f"Status code {status_code}")
+
 
     return result
 
-def deposition_action(env:str, deposition_id:int, action: str) -> dict:
+def deposition_action(env:str, deposition_id:int, action: str) -> Union[dict,None]:
     """Execute an action on a Zenodo deposition
 
     https://developers.zenodo.org/
@@ -337,18 +331,18 @@ def deposition_action(env:str, deposition_id:int, action: str) -> dict:
         dict: result received from Zenodo
     """
     result = None
-    
+
     # Get new token with scope deposit:actions
     di_actions_token = get_token(env, scope='deposit:actions')
     access_token = di_actions_token['access_token']
-    
+
     keys = APP_KEYS[env]
     # https://developers.zenodo.org/#deposition-actions
     # deposit:actions
     url =  urljoin(keys['server'], f'/api/deposit/depositions/{deposition_id}/actions/{action}')
     params = {'access_token': access_token}
     headers = {'Content-Type': 'application/json'}
-    
+
     r = requests.post(url,
                     params=params,
                     json={},
@@ -358,18 +352,17 @@ def deposition_action(env:str, deposition_id:int, action: str) -> dict:
     if status_code >= 200 and status_code< 300:
         result = r.json()
     elif status_code >= 300 and status_code< 400:
-        print(f"Redirection {status_code}")
+        console.print(f"Redirection {status_code}")
     elif status_code >= 400 and status_code< 500:
-        print(f"Client error {status_code}: {r.text}")
+        console.print(f"Client error {status_code}: {r.text}")
     elif status_code >= 500 and status_code< 600:
-        print(f"Server error {status_code}: {r.text}")
+        console.print(f"Server error {status_code}: {r.text}")
     else:
-        print(f"Status code {status_code}")
-    
-    
+        console.print(f"Status code {status_code}")
+
     return result
 
-def publish_deposition(env:str, deposition_id:int) -> dict:
+def publish_deposition(env:str, deposition_id:int) -> Union[dict,None]:
     """Publish a deposition in Zenodo
 
     Args:
@@ -381,7 +374,7 @@ def publish_deposition(env:str, deposition_id:int) -> dict:
     """
     return deposition_action(env, deposition_id, 'publish')
 
-def edit_deposition(env:str, deposition_id:int) -> dict:
+def edit_deposition(env:str, deposition_id:int) -> Union[dict,None]:
     """Enable edition of a deposition in Zenodo
 
     Args:
@@ -392,35 +385,36 @@ def edit_deposition(env:str, deposition_id:int) -> dict:
         dict: result received from Zenodo
     """
     return deposition_action(env, deposition_id, 'edit')
-    
+
 
 DEPOSITION_ID = None
-
 
 if __name__ == "__main__":
     ENV = 'prod'
     di_token = get_token(ENV, scope='deposit:write')
     if di_token is not None:
-        access_token = di_token['access_token']
+        write_access_token = di_token['access_token']
         deposition_id = DEPOSITION_ID
-        depositions = get_depositions(ENV, access_token, deposition_id)
+        depositions = get_depositions(ENV, write_access_token, deposition_id)
         if depositions is not None:
             deposition_id = depositions['id']
             # Upload the file
             fn = os.path.join('dataset', CSV_FN)
-            file_result = upload_file(access_token, depositions, fn)
-            r = upload_metadata(ENV, access_token, deposition_id)
-            
-    publish_result = publish_deposition(ENV, deposition_id)
-    print(f"DOI URL = {publish_result['doi_url']}")
-    
+            file_result = upload_file(write_access_token, depositions, fn)
+            r = upload_metadata(ENV, write_access_token, deposition_id)
+
+    if deposition_id is not None:
+        publish_result = publish_deposition(ENV, deposition_id)
+        if publish_result is not None:
+            console.print(f"DOI URL = {publish_result['doi_url']}")
+
     # sandbox
     # 'https://doi.org/10.5072/zenodo.129385'
-    
+
     # prod
     # DOI: '10.5281/zenodo.14077232'
     # https://doi.org/10.5281/zenodo.14077232
-    
+
     # New DOI: 10.5281/zenodo.14078194
     # https://zenodo.org/records/14078194
 
@@ -430,3 +424,4 @@ if __name__ == "__main__":
     # https://zenodo.org/badge/DOI/10.5281/zenodo.14078918.svg
 
     pass
+

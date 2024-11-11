@@ -1,2 +1,3 @@
 **/__pycache__/**
-/launch.json
+.vscode/launch.json
+.vscode/settings.json
