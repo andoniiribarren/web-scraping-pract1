@@ -114,10 +114,14 @@ def get_token(environment: str, scope: str):
     
     return di_token
 
-def get_depositions(environment, access_token):
+def get_depositions(environment, access_token, deposition_id=None):
     d = None
     keys = APP_KEYS[environment]
+    
     url =  urljoin(keys['server'], '/api/deposit/depositions')
+    if deposition_id is not None:
+        url =  f'{url}/{str(deposition_id)}'
+    
     headers = {"Content-Type": "application/json"}
     params = {'access_token': access_token}
     
@@ -128,12 +132,19 @@ def get_depositions(environment, access_token):
     headers=headers, 
     """
     
-    r = requests.post(url,
-                    params=params,
-                    json={},
-                    headers=headers,
-                    timeout = 10)
-    
+    if deposition_id is None:
+        r = requests.post(url,
+                        params=params,
+                        json={},
+                        headers=headers,
+                        timeout = 10)
+    else:
+        r = requests.get(url,
+                        params=params,
+                        json={},
+                        headers=headers,
+                        timeout = 10)
+        
     status_code = r.status_code
     if status_code >= 200 and status_code< 300:
         d = r.json()
@@ -168,8 +179,9 @@ def upload_file(ENV, access_token, depositions, fn):
         
         # Put the file in the bucket
         filename = os.path.basename(fn)
+        url = f"{bucket_url}/{filename}"
         r = requests.put(
-            "%s/%s" % (bucket_url, filename),
+            url,
             data=data,
             params=params,
             timeout = 10
@@ -188,13 +200,107 @@ def upload_file(ENV, access_token, depositions, fn):
     
     return file_result
 
+def upload_metadata(ENV, access_token, deposition_id):
+    result = None
+    keys = APP_KEYS[ENV]
+    url =  urljoin(keys['server'], f'/api/deposit/depositions/{deposition_id}')
+    params = {'access_token': access_token}
+    headers = {'Content-Type': 'application/json'}
+
+    data = {
+        'metadata': {
+            'title': "M2.851.PR1",
+            'upload_type': 'dataset',
+            'description': "Film Affinity Top Movies 2024",
+            'creators': [
+                {'name': "Andoni Iribarren González", 'affiliation': "Universitat Oberta de Catalunya"},
+                {'name': "Juan Pedro Rodríguez", 'affiliation': "Universitat Oberta de Catalunya"}
+            ]
+        }
+    }
+    
+
+    r = requests.put(
+        url,
+        data=json.dumps(data),
+        params = params,
+        headers = headers,
+        timeout = 10
+    )
+    status_code = r.status_code
+    if status_code >= 200 and status_code< 300:
+        result = r.json()
+    elif status_code >= 300 and status_code< 400:
+        print(f"Redirection {status_code}")
+    elif status_code >= 400 and status_code< 500:
+        print(f"Client error {status_code}: {r.text}")
+    elif status_code >= 500 and status_code< 600:
+        print(f"Server error {status_code}: {r.text}")
+    else:
+        print(f"Status code {status_code}")
+    
+
+    return result
+
+def publish_deposition(ENV, deposition_id):
+    result = None
+    
+    # Get new token with scope deposit:actions
+    di_actions_token = get_token(ENV, scope='deposit:actions')
+    access_token = di_actions_token['access_token']
+    
+    keys = APP_KEYS[ENV]
+    # https://developers.zenodo.org/#deposition-actions
+    # deposit:actions
+    url =  urljoin(keys['server'], f'/api/deposit/depositions/{deposition_id}/actions/publish')
+    params = {'access_token': access_token}
+    headers = {'Content-Type': 'application/json'}
+    
+    r = requests.post(url,
+                    params=params,
+                    json={},
+                    headers=headers,
+                    timeout = 10)
+    status_code = r.status_code
+    if status_code >= 200 and status_code< 300:
+        result = r.json()
+    elif status_code >= 300 and status_code< 400:
+        print(f"Redirection {status_code}")
+    elif status_code >= 400 and status_code< 500:
+        print(f"Client error {status_code}: {r.text}")
+    elif status_code >= 500 and status_code< 600:
+        print(f"Server error {status_code}: {r.text}")
+    else:
+        print(f"Status code {status_code}")
+    
+    
+    return result
+    
+
+#DEPOSITION_ID = 129385
+#DEPOSITION_ID = None
+DEPOSITION_ID = 14077232
+
 if __name__ == "__main__":
-    ENV = 'sandbox'
+    ENV = 'prod'
     di_token = get_token(ENV, scope='deposit:write')
     if di_token is not None:
         access_token = di_token['access_token']
-        depositions = get_depositions(ENV, access_token)
+        deposition_id = DEPOSITION_ID
+        depositions = get_depositions(ENV, access_token, deposition_id)
         if depositions is not None:
+            deposition_id = depositions['id']
             fn = os.path.join('dataset','top100_2024films.csv')
             file_result = upload_file(ENV, access_token, depositions, fn)
+            r = upload_metadata(ENV, access_token, deposition_id)
             
+    publish_result = publish_deposition(ENV, deposition_id)
+    print(f"DOI URL = {publish_result['doi_url']}")
+    
+    # sandbox
+    # 'https://doi.org/10.5072/zenodo.129385'
+    
+    # prod
+    # https://doi.org/10.5281/zenodo.14077232
+
+    pass
