@@ -61,11 +61,11 @@ APP_KEYS = {
 }
 
 
-def get_token(environment: str, scope: str):
+def get_token(env: str, scope: str) -> dict:
     """_summary_
 
     Args:
-        environment (str): Environment selection. Valid values are 'prod' and 'sandbox'
+        env (str): Environment selection. Valid values are 'prod' and 'sandbox'
         scope (str): Scope for the token. E.g. 'deposit:write'
 
     Returns:
@@ -81,7 +81,7 @@ def get_token(environment: str, scope: str):
     """
     
     di_token: dict = None
-    keys = APP_KEYS[environment]
+    keys = APP_KEYS[env]
     url =  urljoin(keys['server'], '/oauth/token')
     data = {
         'client_id': keys['client_id'],
@@ -115,31 +115,37 @@ def get_token(environment: str, scope: str):
     
     return di_token
 
-def get_depositions(environment, access_token, deposition_id=None):
+def get_depositions(env:str, access_token:str, deposition_id:int=None) -> dict:
+    """_summary_
+
+    Args:
+        ENV (str): environment selection to retrieve the dictionary with server url and client keys
+        access_token (str): token to use the API
+        deposition_id (int, optional): Deposition identifier. Defaults to None.
+
+    Returns:
+        dict: Depositions received from Zenodo
+    """
     d = None
-    keys = APP_KEYS[environment]
+    keys = APP_KEYS[env]
     
     url =  urljoin(keys['server'], '/api/deposit/depositions')
     if deposition_id is not None:
+        # URL to retrieve deposition
         url =  f'{url}/{str(deposition_id)}'
     
     headers = {"Content-Type": "application/json"}
     params = {'access_token': access_token}
     
-    """
-    Headers are not necessary here since "requests" automatically
-    adds "Content-Type: application/json", because we're using
-    the "json=" keyword argument
-    headers=headers, 
-    """
-    
     if deposition_id is None:
+        # Create deposition
         r = requests.post(url,
                         params=params,
                         json={},
                         headers=headers,
                         timeout = 10)
     else:
+        # Retrieve deposition
         r = requests.get(url,
                         params=params,
                         json={},
@@ -157,10 +163,24 @@ def get_depositions(environment, access_token, deposition_id=None):
         print(f"Server error {status_code}: {r.text}")
     else:
         print(f"Status code {status_code}")
+    
     return d
 
 
-def upload_file(ENV, access_token, depositions, fn):
+def upload_file(access_token:str, depositions:object, fn:str) -> dict:
+    """Upload file to deposition in zenodo
+
+    Args:
+        access_token (str): token to use the API
+        depositions (object): depositions retrieved from Zenodo
+        fn (str): filename of the file to upload
+
+    Raises:
+        FileNotFoundError: _description_
+
+    Returns:
+        dict: result received from Zenodo
+    """
     file_result = None
     bucket_url = depositions["links"]["bucket"]
     params = {'access_token': access_token}
@@ -207,9 +227,20 @@ def upload_file(ENV, access_token, depositions, fn):
     
     return file_result
 
-def upload_metadata(ENV, access_token, deposition_id):
+def upload_metadata(env:str, access_token:str, deposition_id:int) -> dict:
+    """_summary_
+
+    Args:
+        env (str): environment selection to retrieve the dictionary with server url and client keys
+        access_token (str): token to use the API
+        deposition_id (int): Deposition identifier.
+
+    Returns:
+        dict: result received from Zenodo
+    """
+    
     result = None
-    keys = APP_KEYS[ENV]
+    keys = APP_KEYS[env]
     url =  urljoin(keys['server'], f'/api/deposit/depositions/{deposition_id}')
     params = {'access_token': access_token}
     headers = {'Content-Type': 'application/json'}
@@ -250,9 +281,20 @@ def upload_metadata(ENV, access_token, deposition_id):
     return result
 
 
-def delete_file(ENV, access_token, deposition_id, file_id):
+def delete_file(env:str, access_token:str, deposition_id:int, file_id:int) -> dict:
+    """_summary_
+
+    Args:
+        env (str): environment selection to retrieve the dictionary with server url and client keys
+        access_token (str): token to use the API
+        deposition_id (int): Deposition identifier.
+        file_id (int): File identifier in the deposition
+
+    Returns:
+        dict: result received from Zenodo
+    """
     result = None
-    keys = APP_KEYS[ENV]
+    keys = APP_KEYS[env]
     url =  urljoin(keys['server'], f'/api/deposit/depositions/{deposition_id}/files/{file_id}')
     params = {'access_token': access_token}
     headers = {'Content-Type': 'application/json'}
@@ -279,14 +321,26 @@ def delete_file(ENV, access_token, deposition_id, file_id):
 
     return result
 
-def deposition_action(ENV, deposition_id, action):
+def deposition_action(env:str, deposition_id:int, action: str) -> dict:
+    """Execute an action on a Zenodo deposition
+
+    https://developers.zenodo.org/
+
+    Args:
+        env (str): _environment selection to retrieve the dictionary with server url and client keys
+        deposition_id (int): Deposition identifier.
+        action (str): Action to execute
+
+    Returns:
+        dict: result received from Zenodo
+    """
     result = None
     
     # Get new token with scope deposit:actions
-    di_actions_token = get_token(ENV, scope='deposit:actions')
+    di_actions_token = get_token(env, scope='deposit:actions')
     access_token = di_actions_token['access_token']
     
-    keys = APP_KEYS[ENV]
+    keys = APP_KEYS[env]
     # https://developers.zenodo.org/#deposition-actions
     # deposit:actions
     url =  urljoin(keys['server'], f'/api/deposit/depositions/{deposition_id}/actions/{action}')
@@ -313,11 +367,29 @@ def deposition_action(ENV, deposition_id, action):
     
     return result
 
-def publish_deposition(ENV, deposition_id):
-    return deposition_action(ENV, deposition_id, 'publish')
+def publish_deposition(env:str, deposition_id:int) -> dict:
+    """Publish a deposition in Zenodo
 
-def edit_deposition(ENV, deposition_id):
-    return deposition_action(ENV, deposition_id, 'edit')
+    Args:
+        env (str): _environment selection to retrieve the dictionary with server url and client keys
+        deposition_id (int): Deposition identifier.
+
+    Returns:
+        dict: result received from Zenodo
+    """
+    return deposition_action(env, deposition_id, 'publish')
+
+def edit_deposition(env:str, deposition_id:int) -> dict:
+    """Enable edition of a deposition in Zenodo
+
+    Args:
+        env (str): _environment selection to retrieve the dictionary with server url and client keys
+        deposition_id (int): Deposition identifier.
+
+    Returns:
+        dict: result received from Zenodo
+    """
+    return deposition_action(env, deposition_id, 'edit')
     
 
 DEPOSITION_ID = None
@@ -334,7 +406,7 @@ if __name__ == "__main__":
             deposition_id = depositions['id']
             # Upload the file
             fn = os.path.join('dataset', CSV_FN)
-            file_result = upload_file(ENV, access_token, depositions, fn)
+            file_result = upload_file(access_token, depositions, fn)
             r = upload_metadata(ENV, access_token, deposition_id)
             
     publish_result = publish_deposition(ENV, deposition_id)
@@ -349,5 +421,10 @@ if __name__ == "__main__":
     
     # New DOI: 10.5281/zenodo.14078194
     # https://zenodo.org/records/14078194
+
+    # Final run:
+    # DOI: 10.5281/zenodo.14078918
+    # DOI URL = https://doi.org/10.5281/zenodo.14078918
+    # https://zenodo.org/badge/DOI/10.5281/zenodo.14078918.svg
 
     pass
