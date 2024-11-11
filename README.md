@@ -5,6 +5,72 @@
 The target is to create a dataset with data scraped from a web and publish the dataset in Zenodo.
 The web site targeted is https://www.filmaffinity.com/es/ranking.php?rn=ranking_2024_topmovies
 
+# Target preliminar analysis
+
+
+## WhoIs
+
+```json
+{
+   'domain_name': ['FILMAFFINITY.COM', 'filmaffinity.com'],
+   'registrar': 'Arsys Internet, S.L. dba NICLINE.COM',
+   'whois_server': 'whois.nicline.com',
+   'referral_url': None,
+   'updated_date': datetime.datetime(2023, 3, 23, 18, 20, 32),
+   'creation_date': datetime.datetime(2001, 6, 20, 14, 23, 27),
+   'expiration_date': datetime.datetime(2026, 6, 20, 14, 23, 27),
+   'name_servers': ['HAL.NS.CLOUDFLARE.COM', 'JULE.NS.CLOUDFLARE.COM'],
+   'status': ['ok https://icann.org/epp#ok', 'ok https://www.icann.org/epp#ok'],
+   'emails': 'abuse@nicline.com',
+   'dnssec': ['unsigned', 'Unsigned'],
+   'name': 'REDACTED FOR PRIVACY',
+   'org': None,
+   'address': 'REDACTED FOR PRIVACY',
+   'city': 'REDACTED FOR PRIVACY',
+   'state': 'Madrid',
+   'registrant_postal_code': 'REDACTED FOR PRIVACY',
+   'country': 'ES'
+}
+```
+
+## Terms of use of the target web
+
+The use policy is described in https://www.filmaffinity.com/es/private.php
+In the use policy of the target web there is no restriction to using scraping tools on the web
+
+## BuiltWith
+
+```json
+{
+  'cdn': ['CloudFlare'], 
+  'hosting-panels': ['cPanel'], 
+  'analytics': ['comScore'], 
+  'javascript-frameworks': ['jQuery']
+}
+```
+
+## Robots
+
+```
+[
+  'User-agent: *', 
+  'Disallow: /*?FASID', 
+  'Disallow: /*&FASID', 
+  'Disallow: /*/sharerating', 
+  'Disallow: /flash/rats.swf'
+]
+```
+
+All agents are allowed, nevertheless we will use 
+
+```
+Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7
+```
+
+## Sitemap
+
+This web site does not provide a sitemap
+
 # Names
 
   - Andoni Iribarren González
