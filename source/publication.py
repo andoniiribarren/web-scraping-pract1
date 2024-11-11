@@ -13,6 +13,7 @@ from urllib.parse import urljoin
 import requests
 import io
 import zipfile
+import zlib
 
 # https://developers.zenodo.org/
 # https://zenodo.org/signup/
@@ -158,10 +159,14 @@ def get_depositions(environment, access_token, deposition_id=None):
         print(f"Status code {status_code}")
     return d
 
+
 def upload_file(ENV, access_token, depositions, fn):
     file_result = None
     bucket_url = depositions["links"]["bucket"]
     params = {'access_token': access_token}
+    # headers = {
+    #     'Content-Encoding': 'gzip'
+    # }
     
     # Verify that the data file exists
     if os.path.isfile(fn) is False:
@@ -170,12 +175,14 @@ def upload_file(ENV, access_token, depositions, fn):
     # https://proxiesapi.com/articles/uploading-zip-files-via-http-post-with-python-requests
     # Create in-memory zip file
     
-    # We wrap the zip file in an io.BytesIO stream so Requests can read it but we don't have to save it locally
-    with io.BytesIO() as data:
-        # Create the zip file and move cursor to beginning
-        with zipfile.ZipFile(data, mode="w") as z:
-            z.write(fn)
-        data.seek(0)
+    # # We wrap the zip file in an io.BytesIO stream so Requests can read it but we don't have to save it locally
+    # with io.BytesIO() as data:
+    #     # Create the zip file and move cursor to beginning
+    #     with zipfile.ZipFile(data, mode="w") as z:
+    #         z.write(fn)
+    #     data.seek(0)
+    
+    with open(fn, "rb") as data:
         
         # Put the file in the bucket
         filename = os.path.basename(fn)
@@ -242,7 +249,37 @@ def upload_metadata(ENV, access_token, deposition_id):
 
     return result
 
-def publish_deposition(ENV, deposition_id):
+
+def delete_file(ENV, access_token, deposition_id, file_id):
+    result = None
+    keys = APP_KEYS[ENV]
+    url =  urljoin(keys['server'], f'/api/deposit/depositions/{deposition_id}/files/{file_id}')
+    params = {'access_token': access_token}
+    headers = {'Content-Type': 'application/json'}
+    
+
+    r = requests.delete(
+        url,
+        params = params,
+        headers = headers,
+        timeout = 10
+    )
+    status_code = r.status_code
+    if status_code >= 200 and status_code< 300:
+        result = r.json()
+    elif status_code >= 300 and status_code< 400:
+        print(f"Redirection {status_code}")
+    elif status_code >= 400 and status_code< 500:
+        print(f"Client error {status_code}: {r.text}")
+    elif status_code >= 500 and status_code< 600:
+        print(f"Server error {status_code}: {r.text}")
+    else:
+        print(f"Status code {status_code}")
+    
+
+    return result
+
+def deposition_action(ENV, deposition_id, action):
     result = None
     
     # Get new token with scope deposit:actions
@@ -252,7 +289,7 @@ def publish_deposition(ENV, deposition_id):
     keys = APP_KEYS[ENV]
     # https://developers.zenodo.org/#deposition-actions
     # deposit:actions
-    url =  urljoin(keys['server'], f'/api/deposit/depositions/{deposition_id}/actions/publish')
+    url =  urljoin(keys['server'], f'/api/deposit/depositions/{deposition_id}/actions/{action}')
     params = {'access_token': access_token}
     headers = {'Content-Type': 'application/json'}
     
@@ -275,11 +312,18 @@ def publish_deposition(ENV, deposition_id):
     
     
     return result
+
+def publish_deposition(ENV, deposition_id):
+    return deposition_action(ENV, deposition_id, 'publish')
+
+def edit_deposition(ENV, deposition_id):
+    return deposition_action(ENV, deposition_id, 'edit')
     
 
 #DEPOSITION_ID = 129385
 #DEPOSITION_ID = None
 DEPOSITION_ID = 14077232
+CSV_FN = 'top100_2024films.csv'
 
 if __name__ == "__main__":
     ENV = 'prod'
@@ -290,7 +334,18 @@ if __name__ == "__main__":
         depositions = get_depositions(ENV, access_token, deposition_id)
         if depositions is not None:
             deposition_id = depositions['id']
-            fn = os.path.join('dataset','top100_2024films.csv')
+            if depositions['submitted']:
+                # Set deposition for edit, otherwise we cannot modify it
+                edit_deposition(ENV, deposition_id)
+            # Delete the file if already exists
+            existing_files = depositions['files']
+            for item in existing_files:
+                if item['filename'] == CSV_FN:
+                    file_id = item['id']
+                    delete_file(ENV, access_token, deposition_id, file_id)
+                    
+            # Upload the file
+            fn = os.path.join('dataset', CSV_FN)
             file_result = upload_file(ENV, access_token, depositions, fn)
             r = upload_metadata(ENV, access_token, deposition_id)
             
@@ -301,6 +356,8 @@ if __name__ == "__main__":
     # 'https://doi.org/10.5072/zenodo.129385'
     
     # prod
+    # DOI: '10.5281/zenodo.14077232'
     # https://doi.org/10.5281/zenodo.14077232
+    # New DOI: 10.5281/zenodo.14078194
 
     pass
