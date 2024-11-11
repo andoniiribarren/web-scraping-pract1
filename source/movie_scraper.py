@@ -28,6 +28,7 @@ import time
 import requests
 import csv
 import whois
+import builtwith
 
 from tqdm import tqdm
 
@@ -42,10 +43,16 @@ DEFAULT_CRAWL_DELAY_S = 0.1
 TOTAL_MOVIES = 100
 
 def get_whois(url:str) -> dict:
-    console.rule("[bold red]WhoIs")
+    console.print("\n[bold underline]WhoIs[/]")
     w = whois.whois(url)
-    pprint(w)
+    pprint(w, console=console)
     return w
+
+def get_builtwith(url:str) -> dict:
+    console.print("\n[bold underline]BuiltWith[/]")
+    r = builtwith.builtwith(url)
+    pprint(r, console=console)
+    return r
 
 def parse_robots(url:str, user_agent:str) -> urllib.robotparser.RobotFileParser:
     robot_url = urljoin(url, "robots.txt")
@@ -75,7 +82,7 @@ def parse_robots(url:str, user_agent:str) -> urllib.robotparser.RobotFileParser:
         # Establecer un mínimo de 1
         crawl_delay = max(DEFAULT_CRAWL_DELAY_S, crawl_delay)
 
-    console.rule("[bold red]Robots")
+    console.print("\n[bold underline]Robots[/]")
     pprint(l)
     
     return rp, crawl_delay
@@ -286,10 +293,13 @@ def movie_scraper():
     #
     # Preliminar
     #
+    console.rule("[bold red]Preliminar")
     user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
     get_whois(base_url)
+    get_builtwith(base_url)
     rp, crawl_delay = parse_robots(base_url, user_agent)
 
+    console.print()
     console.rule(f"[bold red]Process {target_url}")
 
     # Get driver
