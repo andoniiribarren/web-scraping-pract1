@@ -7,6 +7,7 @@ from movie_scraper import movie_scraper
 
 
 def main():
+    # Create console for output
     movie_scraper()
 
 if __name__ == "__main__":

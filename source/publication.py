@@ -15,6 +15,8 @@ import io
 import zipfile
 import zlib
 
+from common import CSV_FN, console
+
 # https://developers.zenodo.org/
 # https://zenodo.org/signup/
 
@@ -393,7 +395,7 @@ def edit_deposition(env:str, deposition_id:int) -> dict:
     
 
 DEPOSITION_ID = None
-CSV_FN = 'top100_2024films.csv'
+
 
 if __name__ == "__main__":
     ENV = 'prod'
