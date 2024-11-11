@@ -320,9 +320,7 @@ def edit_deposition(ENV, deposition_id):
     return deposition_action(ENV, deposition_id, 'edit')
     
 
-#DEPOSITION_ID = 129385
-#DEPOSITION_ID = None
-DEPOSITION_ID = 14077232
+DEPOSITION_ID = None
 CSV_FN = 'top100_2024films.csv'
 
 if __name__ == "__main__":
@@ -334,16 +332,6 @@ if __name__ == "__main__":
         depositions = get_depositions(ENV, access_token, deposition_id)
         if depositions is not None:
             deposition_id = depositions['id']
-            if depositions['submitted']:
-                # Set deposition for edit, otherwise we cannot modify it
-                edit_deposition(ENV, deposition_id)
-            # Delete the file if already exists
-            existing_files = depositions['files']
-            for item in existing_files:
-                if item['filename'] == CSV_FN:
-                    file_id = item['id']
-                    delete_file(ENV, access_token, deposition_id, file_id)
-                    
             # Upload the file
             fn = os.path.join('dataset', CSV_FN)
             file_result = upload_file(ENV, access_token, depositions, fn)
@@ -358,6 +346,8 @@ if __name__ == "__main__":
     # prod
     # DOI: '10.5281/zenodo.14077232'
     # https://doi.org/10.5281/zenodo.14077232
+    
     # New DOI: 10.5281/zenodo.14078194
+    # https://zenodo.org/records/14078194
 
     pass
