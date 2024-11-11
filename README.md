@@ -1,3 +1,10 @@
+# UOC M2.851 Tipología y ciclo de vida de los datos - PR 1
+
+# Target
+
+The target is to create a dataset with data scrapped from a web and publish the dataset in Zenodo.
+The web site targeted is https://www.filmaffinity.com/es/ranking.php?rn=ranking_2024_topmovies
+
 # Names
 
   - Andoni Iribarren González
@@ -18,6 +25,17 @@ To execute the program use:
 python source/main.py
 ```
 
+# Publication instructions
+
+Once the dataset has been created, it can be automatically published in a new Zenodo deposition with
+
+```bash
+python source/publish.py
+```
 
 # Dataset DOI
+
+We have already published the dataset generated, with DOI <https://doi.org/10.5281/zenodo.14078918>
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14078918.svg)](https://doi.org/10.5281/zenodo.14078918)
 
