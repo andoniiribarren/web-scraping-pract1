@@ -1,0 +1,66 @@
+#
+# To install
+#
+# sudo apt-get install build-essential htop -y
+# sudo apt-get install python3.11-full python3.11-venv python3.11-dev libpython3.11-dev -y
+
+
+########################################################################################
+#
+# General
+#
+########################################################################################
+
+
+# Rich is a Python library for rich text and beautiful formatting in the terminal.
+# The Rich API makes it easy to add color and style to terminal output. 
+# Rich can also render pretty tables, progress bars, markdown, syntax highlighted source code, tracebacks, and more — out of the box.
+rich
+
+
+
+########################################################################################
+#
+# Scraping
+#
+########################################################################################
+
+# Able to extract data for all the popular TLDs (com, org, net, ...)
+# Query a WHOIS server directly 
+python-whois
+
+
+# Requests allows you to send HTTP/1.1 requests extremely easily. 
+# There’s no need to manually add query strings to your URLs, or to
+# form-encode your PUT & POST data — but nowadays, just use the json method!
+# https://requests.readthedocs.io/
+requests
+
+
+# Python language bindings for Selenium WebDriver.
+# https://pypi.org/project/selenium/
+selenium
+
+# Simplify management of binary drivers for different browsers.
+# https://pypi.org/project/webdriver-manager/
+webdriver-manager
+
+# urllib3 is a powerful, user-friendly HTTP client for Python. Much of the Python ecosystem already uses urllib3 and you should too
+# https://urllib3.readthedocs.io/en/stable/
+urllib3
+
+# Brotli is a generic-purpose lossless compression algorithm that compresses data using a combination
+# of a modern variant of the LZ77 algorithm, Huffman coding and 2nd order context modeling, with a
+# compression ratio comparable to the best currently available general-purpose compression methods.
+# It is similar in speed with deflate but offers more dense compression.
+brotli
+
+
+# Beautiful Soup is a library that makes it easy to scrape information from web pages.
+# It sits atop an HTML or XML parser, providing Pythonic idioms for iterating, searching, and modifying the parse tree.
+beautifulsoup4
+
+# Detect the technology used by a website, such as Apache, JQuery, and Wordpress
+builtwith
+
+

@@ -13,7 +13,6 @@
 
 
 argparse
-datetime
 tzlocal
 
 # Analysis

@@ -18,6 +18,31 @@ The web site targeted is https://www.filmaffinity.com/es/ranking.php?rn=ranking_
 
 # Code instructions
 
+## Environment
+
+The file requirements.min.tx contains the minimum requirements to execute the code
+The minimum python version is 3.9; it is recommended to use python3.11
+You can create an environment using venv
+
+```bash
+python3.11 -m env venv311
+```
+
+Then activate the virtual environment with
+
+```bash
+source venv311/bin/activate
+```
+
+Install the required libraries
+
+```bash
+python3.11 -m pip install --upgrade pip -r requirements.min.txt
+```
+
+
+## Execution of the scrapping
+
 The code is designed to be executed from the base directory. Source is in the source directory and results will be stored in the dataset directory
 To execute the program use:
 
@@ -25,7 +50,7 @@ To execute the program use:
 python source/main.py
 ```
 
-# Publication instructions
+## Publication instructions
 
 Once the dataset has been created, it can be automatically published in a new Zenodo deposition with
 
