@@ -2,7 +2,7 @@
 
 # Target
 
-The target is to create a dataset with data scrapped from a web and publish the dataset in Zenodo.
+The target is to create a dataset with data scraped from a web and publish the dataset in Zenodo.
 The web site targeted is https://www.filmaffinity.com/es/ranking.php?rn=ranking_2024_topmovies
 
 # Names
@@ -14,7 +14,9 @@ The web site targeted is https://www.filmaffinity.com/es/ranking.php?rn=ranking_
 
   - source
     - main.py: entry point for the program
+    - common.py: common functionality and constants
     - movie_scraper.py: module to obtain top100_2024 films
+    - publication: module to publish the generated dataset to Zenodo
 
 # Code instructions
 
@@ -41,7 +43,7 @@ python3.11 -m pip install --upgrade pip -r requirements.min.txt
 ```
 
 
-## Execution of the scrapping
+## Execution of the scraping
 
 The code is designed to be executed from the base directory. Source is in the source directory and results will be stored in the dataset directory
 To execute the program use:

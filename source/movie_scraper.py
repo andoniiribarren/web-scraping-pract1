@@ -2,6 +2,10 @@
 # -*- encoding: utf-8 -*-
 # cython: language_level=3
 
+"""Movie scraper functionality to get the links and data of the top rated movies and generate the dataset
+"""
+
+
 import os
 import urllib
 import urllib.parse

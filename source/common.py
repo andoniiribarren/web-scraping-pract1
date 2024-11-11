@@ -2,6 +2,10 @@
 # -*- encoding: utf-8 -*-
 # cython: language_level=3
 
+"""Common functionality, console and constants
+"""
+
+
 import logging
 import rich
 from rich.logging import RichHandler
