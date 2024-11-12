@@ -283,7 +283,7 @@ def process_movie_links(user_agent:str,
         response = requests.get(movie_link, headers=headers, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        pos = i
+        pos = i+1
 
         # Title
         title_element = soup.select_one('#main-title > span:nth-child(1)')
