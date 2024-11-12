@@ -14,7 +14,7 @@ from typing import (
 import os
 import requests
 
-from common import CSV_FN, console
+from common import DATA_DIR, CSV_FN, console
 
 # https://developers.zenodo.org/
 # https://zenodo.org/signup/
@@ -399,7 +399,7 @@ if __name__ == "__main__":
         if depositions is not None:
             deposition_id = depositions['id']
             # Upload the file
-            fn = os.path.join('dataset', CSV_FN)
+            fn = os.path.join(DATA_DIR, CSV_FN)
             file_result = upload_file(write_access_token, depositions, fn)
             r = upload_metadata(ENV, write_access_token, deposition_id)
 

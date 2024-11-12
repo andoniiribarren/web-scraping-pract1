@@ -18,7 +18,7 @@ import csv
 from typing import (
     Tuple,
     Union,
-    Set
+    List
 )
 
 import rich.progress
@@ -42,25 +42,27 @@ from whois import whois
 from builtwith import builtwith
 
 
-from common import CSV_FN, console
+from common import DATA_DIR, CSV_FN, USE_HEADLESS, DEFAULT_CRAWL_DELAY_S, TOTAL_MOVIES, console
 
-#
-# CONSTANTS
-#
-USE_HEADLESS = False
-DEFAULT_CRAWL_DELAY_S = 0.1
-TOTAL_MOVIES = 100
 
-def get_whois(url:str) -> dict:
-    console.print("\n[bold underline]WhoIs[/]")
-    w = whois(url)
-    pprint(w, console=console)
+def get_whois(url:str) -> Union[dict,None]:
+    w = None
+    try:
+        console.print("\n[bold underline]WhoIs[/]")
+        w = whois(url)
+        pprint(w, console=console)
+    except:
+        pass
     return w
 
-def get_builtwith(url:str) -> dict:
-    console.print("\n[bold underline]BuiltWith[/]")
-    r = builtwith(url)
-    pprint(r, console=console)
+def get_builtwith(url:str) -> Union[dict,None]:
+    r = None
+    try:
+        console.print("\n[bold underline]BuiltWith[/]")
+        r = builtwith(url)
+        pprint(r, console=console)
+    except:
+        pass
     return r
 
 def parse_robots(url:str, user_agent:str) -> Tuple[urllib.robotparser.RobotFileParser, float]:
@@ -139,7 +141,7 @@ def get_movie_links(user_agent:str,
                     driver:webdriver.Chrome, 
                     progress:rich.progress.Progress, 
                     rp: urllib.robotparser.RobotFileParser,
-                    crawl_delay:float) -> Set[str]:
+                    crawl_delay:float) -> List[str]:
     """Get the movie links from the main ranking page
 
     The algorithm will push the 'more' button until it gets
@@ -160,8 +162,8 @@ def get_movie_links(user_agent:str,
     # Add task to progress
     task = progress.add_task("Get movie links", total=TOTAL_MOVIES)
 
-    # Usamos un set para evitar duplicados en los enlaces
-    movie_links: Set[str] = set()
+    # Usamos una lista para mantener el orden de los elementos
+    movie_links: List[str] = list()
 
     # Sólo se muestran los primeros 30 resultados, hay que volver a usar el webdriver de 
     # Selenium para cargar más resultados hasta que salgan las 100 películas 
@@ -247,7 +249,7 @@ def get_movie_field(soup:BeautifulSoup, name:str) -> str:
 def process_movie_links(user_agent:str,
                         progress:rich.progress.Progress,
                         crawl_delay:float,
-                        movie_links: Set[str]) -> list[list]:
+                        movie_links: List[str]) -> list[list]:
     """Process the list of movie links to retrieve the data of each movie
 
     Args:
@@ -332,7 +334,8 @@ def store_dataset(progress:rich.progress.Progress, movies_data:list[list]):
     """
     # Guardamos los datos en un archivo CSV
     task = progress.add_task("Output dataset", total=1)
-    fn = os.path.join('dataset', CSV_FN)
+    os.makedirs(DATA_DIR, exist_ok=True)
+    fn = os.path.join(DATA_DIR, CSV_FN)
     with open(fn, mode="w", newline='', encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(["Posición","Título", "Duración", "País", "Dirección", "Género", "Nota"])

@@ -21,7 +21,16 @@ console = Console()
 
 
 #
-# CONSTANTS
+# DATASET CONSTANTS
 #
 
+DATA_DIR = 'dataset'
 CSV_FN = 'top100_2024films.csv'
+
+
+#
+# CRAWLING CONSTANTS
+#
+USE_HEADLESS = False
+DEFAULT_CRAWL_DELAY_S = 1
+TOTAL_MOVIES = 100
