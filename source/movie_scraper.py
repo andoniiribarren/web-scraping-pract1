@@ -205,7 +205,7 @@ def get_movie_links(user_agent:str,
                     if len(movie_links) < TOTAL_MOVIES:
                         if href not in movie_links:
                             # This is a new link, add to the list
-                            movie_links.add(href)
+                            movie_links.append(href)
                             has_added_new_links = True
                             # Update progress
                             progress.advance(task)
