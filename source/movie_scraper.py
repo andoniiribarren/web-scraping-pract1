@@ -317,6 +317,19 @@ def process_movie_links(user_agent:str,
 
 
 def store_dataset(progress:rich.progress.Progress, movies_data:list[list]):
+    """Store the movies data into a csv file
+
+    Args:
+        progress (rich.progress.Progress): progress bar
+        movies_data (list[list]): List of movie registers. Each movie register is a list with the following fields
+            - index
+            - title
+            - duration
+            - country
+            - director
+            - genre
+            - rating
+    """
     # Guardamos los datos en un archivo CSV
     task = progress.add_task("Output dataset", total=1)
     fn = os.path.join('dataset', CSV_FN)
@@ -329,7 +342,8 @@ def store_dataset(progress:rich.progress.Progress, movies_data:list[list]):
     progress.advance(task)
 
 def movie_scraper():
-
+    """Scrap 2024 top movies data from film affinity web and store the dataset in csv format
+    """
 
     # https://www.filmaffinity.com/es/ranking.php?rn=ranking_2024_topmovies
     base_url = "https://www.filmaffinity.com"
